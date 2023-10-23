@@ -1,0 +1,150 @@
+{
+  "name": "elastic_search_caching_issue",
+  "description": "The Elastic Search Caching Issue is a common incident type where the caching feature of Elastic Search is not functioning as expected. This can cause delays or errors in retrieving search results and can impact the performance of the entire system. The issue typically requires troubleshooting and configuration changes to resolve.",
+  "params": [
+    {
+      "name": "ES_HOST",
+      "value": ""
+    },
+    {
+      "name": "REQUESTS_PER_SECOND",
+      "value": ""
+    },
+    {
+      "name": "ES_INDEX",
+      "value": ""
+    },
+    {
+      "name": "ES_URL",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Elastic Search Caching Issue\nThe Elastic Search Caching Issue is a common incident type where the caching feature of Elastic Search is not functioning as expected. This can cause delays or errors in retrieving search results and can impact the performance of the entire system. The issue typically requires troubleshooting and configuration changes to resolve."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if Elastic Search is running"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `systemctl status elasticsearch`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the Elastic Search cluster health"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `curl  -XGET  '${ES_HOST}:9200/_cluster/health?pretty'`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the Elastic Search index settings"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `curl  -XGET  '${ES_HOST}:9200/${ES_INDEX}/_settings?pretty'`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the Elastic Search index mapping"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `curl  -XGET  '${ES_HOST}:9200/${ES_INDEX}/_mapping?pretty'`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Disable caching for a specific index if needed"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `curl  -XPUT  '${ES_HOST}:9200/${ES_INDEX}/_settings'  -H  'Content-Type: application/json'  -d  '{\"index\": {\"cache\": {\"query\": {\"enabled\": false}}}}'`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Clear the Elastic Search cache if needed"
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `curl  -XPOST  '${ES_HOST}:9200/_cache/clear'`"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check the Elastic Search cache stats"
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `curl  -XGET  '${ES_HOST}:9200/_nodes/stats/indices/query_cache?pretty'`"
+    },
+    {
+      "name": "cell_16",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## The Elastic Search cluster might have been overloaded with requests, causing the caching mechanism to fail and leading to slow response times."
+    },
+    {
+      "name": "cell_17",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_elastic_search_diagnosis($REQUESTS_PER_SECOND, $ES_URL)"
+    },
+    {
+      "name": "cell_18",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Clear the cache on Elastic Search manually or programmatically."
+    },
+    {
+      "name": "cell_19",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_clear_cache_script($ES_INDEX, $ES_URL)"
+    }
+  ]
+}
